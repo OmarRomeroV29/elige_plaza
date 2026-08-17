@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Maestra de Plazas DGETI 2025-2026</title>
+    <!-- Leaflet.js (OpenStreetMap) - 100% Gratis sin API Key para GitHub Pages -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --primary: #1b4f72;
+            --secondary: #d35400;
+            --success: #27ae60;
+            --danger: #c0392b;
+            --light-bg: #ebedef;
+            --white: #ffffff;
+            --text: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px 15px;
+            font-size: 16px;
+        }
+
+        .container {
+            max-width: 1050px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-size: 1.8rem;
+        }
+
+        .header p {
+            font-size: 1rem;
+            color: #566573;
+            margin: 0;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .card {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            border-top: 5px solid var(--primary);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.25rem;
+            color: var(--primary);
+            border-bottom: 2px solid var(--light-bg);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            color: #1a252f;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 0.98rem;
+            border: 1.5px solid #bdc3c7;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-family: inherit;
+            background-color: #fff;
+            color: #1a252f;
+            height: 48px;
+            line-height: 1.4;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(27, 79, 114, 0.15);
+        }
+
+        input::placeholder {
+            color: #95a5a6;
+            font-size: 0.92rem;
+        }
+
+        input:disabled {
+            background-color: #f2f3f4;
+            color: #7f8c8d;
+            cursor: not-allowed;
+            border-color: #d5dbdb;
+        }
+
+        .clave-horas-grid {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 15px;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px 20px;
+            width: 100%;
+            font-size: 1.15rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 4px 6px rgba(27, 79, 114, 0.2);
+        }
+
+        button:hover {
+            background-color: #154360;
+        }
+
+        button:active {
+            transform: scale(0.99);
+        }
+
+        /* Resultados */
+        #resultados {
+            display: none;
+            grid-column: 1 / -1;
+            background: #eaf2f8;
+            border-top: 5px solid var(--primary);
+            margin-top: 10px;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .status-ok { background-color: var(--success); }
+        .status-fail { background-color: var(--danger); }
+
+        .salary-highlight {
+            font-size: 2.3rem;
+            font-weight: bold;
+            color: var(--secondary);
+            display: block;
+            margin: 10px 0;
+        }
+
+        .map-btn {
+            background-color: #4285f4;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        .map-btn:hover { background-color: #3367d6; }
+
+        /* Toggle Switch de Filtro Inteligente */
+        .toggle-filtro-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #eaf2f8, #d6eaf8);
+            border: 1.5px solid #aed6f1;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-top: 4px;
+            transition: background 0.3s;
+        }
+        .toggle-filtro-wrapper.activo {
+            background: linear-gradient(135deg, #eafaf1, #d5f5e3);
+            border-color: #a9dfbf;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #bdc3c7;
+            border-radius: 28px;
+            transition: background-color 0.3s;
+            width: 100%;
+            padding: 0;
+            border: none;
+            box-shadow: none;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: var(--success);
+        }
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+        .toggle-filtro-label {
+            flex: 1;
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: #1a252f;
+            line-height: 1.3;
+        }
+        .toggle-filtro-label small {
+            display: block;
+            font-weight: 400;
+            color: #566573;
+            font-size: 0.82rem;
+            margin-top: 2px;
+        }
+        .toggle-filtro-badge {
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 12px;
+            background: #aed6f1;
+            color: #1b4f72;
+            white-space: nowrap;
+            transition: background 0.3s, color 0.3s;
+        }
+        .toggle-filtro-wrapper.activo .toggle-filtro-badge {
+            background: #a9dfbf;
+            color: #1e8449;
+        }
+
+        /* Panel GPS y filtros de cercanía */
+        .gps-panel {
+            background: linear-gradient(135deg, #f0f4ff, #e8f0fe);
+            border: 1.5px solid #c5cae9;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .btn-gps {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.92rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: auto;
+            margin-top: 0;
+            box-shadow: 0 2px 6px rgba(27,79,114,0.25);
+            transition: background 0.2s, transform 0.1s;
+            text-align: left;
+        }
+        .btn-gps:hover { background: #154360; }
+        .btn-gps:active { transform: scale(0.98); }
+        .btn-gps:disabled { background: #95a5a6; cursor: not-allowed; }
+        .gps-status {
+            font-size: 0.82rem;
+            color: #566573;
+            min-height: 18px;
+        }
+        .gps-status.ok  { color: #1e8449; font-weight: 600; }
+        .gps-status.err { color: #c0392b; font-weight: 600; }
+        .gps-toggles {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .gps-toggle-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            margin: 0;
+        }
+        .gps-toggle-label input[type=checkbox] {
+            display: none;
+        }
+        .gps-toggle-pill {
+            padding: 5px 14px;
+            border-radius: 20px;
+            background: #dde3f5;
+            color: #3949ab;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: 2px solid #c5cae9;
+            transition: all 0.25s;
+            width: auto;
+            box-shadow: none;
+        }
+        .gps-toggle-label input:checked + .gps-toggle-pill {
+            background: #3949ab;
+            color: white;
+            border-color: #3949ab;
+        }
+        .gps-toggle-pill:hover {
+            background: #c5cae9;
+        }
+        .gps-toggle-label input:checked + .gps-toggle-pill:hover {
+            background: #283593;
+        }
+
+        /* Panel de Selección de Ubicación de Origen */
+        .origen-selector-panel {
+            background: #f8fafc;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 15px;
+        }
+        .origen-mode-btns {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .mode-btn {
+            background: #e2e8f0;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: auto;
+            margin-top: 0;
+            box-shadow: none;
+            transition: all 0.2s;
+        }
+        .mode-btn:hover { background: #cbd5e1; }
+        .mode-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .origen-input-group {
+            margin-bottom: 8px;
+        }
+        .ubicacion-activa-badge {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #1e8449;
+            background: #eafaf1;
+            border: 1px solid #a9dfbf;
+            border-radius: 6px;
+            padding: 6px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        /* Modal de Mapa Interactivo */
+        .map-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+        .map-modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 850px;
+            width: 100%;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+        }
+        .map-modal-header {
+            background: var(--primary);
+            color: white;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .map-modal-header h3 {
+            margin: 0;
+            font-size: 1.15rem;
+        }
+        .map-modal-close {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0 8px;
+            margin: 0;
+            box-shadow: none;
+            width: auto;
+        }
+        #leafletMapContainer {
+            height: 420px;
+            width: 100%;
+            background: #e2e8f0;
+        }
+        .map-modal-footer {
+            padding: 14px 20px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .map-selection-info {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #334155;
+        }
+        .btn-confirm-map {
+            background: var(--success);
+            color: white;
+            padding: 10px 20px;
+            font-size: 0.95rem;
+            width: auto;
+            margin: 0;
+        }
+        .btn-confirm-map:hover { background: #219653; }
+
+        @media (max-width: 850px) {
+            .grid-layout, .result-grid {
+                grid-template-columns: 1fr;
+            }
+            .clave-horas-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Catálogo Total de Plazas DGETI 2025-2026</h1>
+        <p>Selecciona la categoría presupuestal, el plantel en Veracruz y comprueba el cálculo de HSM o sueldo fijo.</p>
+    </div>
+
+    <form id="calculatorForm">
+        <div class="grid-layout">
+            <!-- Sección 1: Mi Perfil -->
+            <div class="card">
+                <h2>1. Credenciales Académicas</h2>
+                
+                <!-- Selector de Ubicación de Origen -->
+                <div class="form-group">
+                    <label for="origen">Ubicación de Origen / Partida:</label>
+                    <div class="origen-selector-panel">
+                        <div class="origen-mode-btns">
+                            <button type="button" class="mode-btn" id="btnModeGPS" onclick="detectarUbicacion()">📍 GPS Dispositivo</button>
+                            <button type="button" class="mode-btn" id="btnModeMapa" onclick="abrirMapaModal()">🗺️ Seleccionar en Mapa</button>
+                        </div>
+
+                        <!-- Campo final de Origen (Editable) -->
+                        <input type="text" id="origen" placeholder="Ej. Gutiérrez Zamora, Veracruz (o escribe tu ciudad...)" required oninput="onTextoOrigenInput()">
+                        
+                        <div id="badgeUbicacionActiva" class="ubicacion-activa-badge" style="display:none">
+                            <span id="txtUbicacionActiva">📍 Ubicación fijada</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="grado">Nivel Educativo Comprobable:</label>
+                    <select id="grado" required onchange="toggleFecha(); actualizarFiltroInteligente();">
+                        <option value="" disabled selected hidden>Selecciona nivel educativo...</option>
+                        <option value="pasante">Pasante de Licenciatura</option>
+                        <option value="titulado_nuevo">Título de Licenciatura (Recién egresado)</option>
+                        <option value="titulado_antiguo">Título de Licenciatura (Con antigüedad)</option>
+                        <option value="especialidad">Especialidad (Mínimo 10 meses)</option>
+                        <option value="maestria">Maestría</option>
+                        <option value="doctorado">Doctorado</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="divFecha">
+                    <label for="fechaTitulacion">Fecha de Expedición del Título o Grado:</label>
+                    <input type="date" id="fechaTitulacion" onchange="actualizarFiltroInteligente()">
+                </div>
+
+                <!-- Toggle: Filtro Inteligente de Plazas Compatibles -->
+                <div class="toggle-filtro-wrapper" id="wrapperFiltroInteligente">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggleFiltroCompatible" onchange="actualizarFiltroInteligente()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <div class="toggle-filtro-label">
+                        Mostrar solo plazas compatibles
+                        <small>Filtra las categorías donde tu perfil y antigüedad SÍ son válidos</small>
+                    </div>
+                    <span class="toggle-filtro-badge" id="badgeFiltro">TODAS</span>
+                </div>
+            </div>
+
+            <!-- Sección 2: La Vacante -->
+            <div class="card">
+                <h2>2. Configuración de la Vacante</h2>
+                
+                <div class="form-group">
+                    <label for="asignatura">Asignatura a impartir:</label>
+                    <input type="text" id="asignatura" placeholder="Ej. Programación, Cultura Digital..." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="plantel">Plantel DGETI (Estado de Veracruz):</label>
+
+                    <!-- Filtros de Cercanía por Distancia -->
+                    <div class="gps-panel" id="gpsPanel">
+                        <div id="gpsStatus" class="gps-status">📍 Selecciona una ubicación o usa el GPS arriba para ordenar por cercanía</div>
+                        <div class="gps-toggles" id="gpsToggles" style="display:none">
+                            <label class="gps-toggle-label">
+                                <input type="checkbox" id="toggleMenos2h" onchange="filtrarPlanteles()">
+                                <span class="gps-toggle-pill" id="pillMenos2h">⏱️ &lt; 2 horas</span>
+                            </label>
+                            <label class="gps-toggle-label">
+                                <input type="checkbox" id="toggle5cercanos" onchange="filtrarPlanteles()">
+                                <span class="gps-toggle-pill" id="pill5cercanos">🏆 5 más cercanos</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <input type="text" id="filtroPlantel" placeholder="🔍 Filtrar por número o nombre (ej. 14, 191, CETIS)..." oninput="filtrarPlanteles()" style="margin-bottom: 6px;">
+                    <select id="plantel" required></select>
+                </div>
+
+                <div class="clave-horas-grid">
+                    <div class="form-group">
+                        <label for="clave">Categoría (Clave):</label>
+                        <input type="text" id="filtroClave" placeholder="🔍 Filtrar por clave o tipo (ej. 45, 46, Titular)..." oninput="filtrarClaves()" style="margin-bottom: 6px;">
+                        <select id="clave" required onchange="manejarHoras()"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="horas">Horas:</label>
+                        <input type="number" id="horas" min="1" max="40" placeholder="Ej. 20" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="button" onclick="procesarVacante()">Calcular Compatibilidad y Sueldo</button>
+    </form>
+
+    <!-- Sección 3: Resultados -->
+    <div class="card" id="resultados">
+        <h2>Reporte de Viabilidad</h2>
+        <div class="result-grid">
+            
+            <div>
+                <h3>Revisión Normativa (DGETI)</h3>
+                <p>Años de experiencia documentada: <strong id="resAntiguedad">0</strong> años.</p>
+                <div id="statusBadge" class="status-badge"></div>
+                <p id="motivoRequisito" style="margin-top: 10px; font-size: 0.9em;"></p>
+            </div>
+
+            <div>
+                <h3>Proyección Salarial (2025)</h3>
+                <p style="margin-bottom: 0;">Sueldo Integrado Base:</p>
+                <span id="resSueldo" class="salary-highlight"></span>
+                <p id="desgloseSueldo" style="font-size: 0.9em; color: #7f8c8d;"></p>
+            </div>
+
+            <div style="grid-column: 1 / -1; border-top: 1px solid #bdc3c7; padding-top: 15px;">
+                <h3>Logística de Traslado</h3>
+                <p>Origen: <strong><span id="resOrigen"></span></strong><br>Destino: <strong><span id="resDestino"></span></strong></p>
+                
+                <a id="btnMapa" href="#" target="_blank" class="map-btn" style="color: white; padding: 12px 20px; border-radius: 6px; display: inline-block; margin-bottom: 10px; font-weight: 600; text-decoration: none;">
+                    📍 Abrir indicaciones de ruta en Google Maps
+                </a>
+
+                <!-- Aclaración con Diagrama Visual SVG -->
+                <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; margin-top: 10px;">
+                    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <p style="margin: 0 0 6px 0; font-weight: 700; color: #1b4f72; font-size: 0.92rem;">
+                                ℹ️ Aclaración sobre Distancias y Tiempos:
+                            </p>
+                            <p style="margin: 0; font-size: 0.85rem; color: #475569; line-height: 1.45;">
+                                Las distancias en los desplegables se calculan en <strong>línea recta (Haversine)</strong> a velocidad estimada de carretera (<strong>~65 km/h</strong>). Para consultar la <strong>ruta exacta por autopista con tráfico real</strong>, haz clic en el botón de Google Maps.
+                            </p>
+                        </div>
+                        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; text-align: center;">
+                            <svg width="210" height="60" viewBox="0 0 210 60" style="display: block; margin: 0 auto;">
+                                <circle cx="25" cy="35" r="7" fill="#27ae60" />
+                                <text x="25" y="54" font-size="9" text-anchor="middle" font-weight="bold" fill="#1e8449">Origen</text>
+                                
+                                <circle cx="185" cy="35" r="7" fill="#c0392b" />
+                                <text x="185" y="54" font-size="9" text-anchor="middle" font-weight="bold" fill="#922b21">Plantel</text>
+
+                                <line x1="32" y1="35" x2="178" y2="35" stroke="#3498db" stroke-width="2.5" stroke-dasharray="4,4" />
+                                <text x="105" y="30" font-size="9" text-anchor="middle" font-weight="bold" fill="#1b4f72">Línea Recta App (Haversine)</text>
+
+                                <path d="M 32 35 Q 70 8, 105 22 T 178 35" fill="none" stroke="#d35400" stroke-width="2.5" />
+                                <text x="105" y="12" font-size="9" text-anchor="middle" font-weight="bold" fill="#d35400">Carretera Real (Google Maps)</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. Catálogo Completo de Sueldos 2025 y Requisitos (41 Categorías Oficiales DGETI)
+    const tabulador = {
+        // Horas Sueltas (HSM)
+        'E4511': { tipo: 'HSM', z2: 380.20, z3: 457.60, reqAños: 0, reqMin: 'pasante', reqAlt: [], nombre: 'Tec. Doc. Asig. A' },
+        'E4513': { tipo: 'HSM', z2: 420.45, z3: 496.35, reqAños: 0, reqMin: 'titulado', reqAlt: [], nombre: 'Tec. Doc. Asig. B' },
+        'E4515': { tipo: 'HSM', z2: 504.95, z3: 601.75, reqAños: 2, reqMin: 'titulado', reqAlt: [], nombre: 'Prof. Asig. A' },
+        'E4517': { tipo: 'HSM', z2: 565.60, z3: 665.15, reqAños: 3, reqMin: 'titulado', reqAlt: ['especialidad','maestria','doctorado'], nombre: 'Prof. Asig. B' },
+        'E4523': { tipo: 'HSM', z2: 628.00, z3: 755.65, reqAños: 6, reqMin: 'titulado', reqAlt: ['especialidad (2a)','maestria','doctorado'], nombre: 'Prof. Asig. C' },
+        
+        // Fijos 1/2 Tiempo (20 hrs)
+        'E4623': { tipo: 'FIJO', horasFijas: 20, z2: 10435.50, z3: 12303.25, reqAños: 2, reqMin: 'titulado', reqAlt: [], nombre: 'Prof. Asoc. A' },
+        'E4625': { tipo: 'FIJO', horasFijas: 20, z2: 11559.85, z3: 13617.45, reqAños: 3, reqMin: 'titulado', reqAlt: ['especialidad','maestria','doctorado'], nombre: 'Prof. Asoc. B' },
+        'E4627': { tipo: 'FIJO', horasFijas: 20, z2: 14607.10, z3: 17133.15, reqAños: 8, reqMin: 'titulado', reqAlt: ['especialidad (4a)','maestria (5a)','doctorado'], nombre: 'Prof. Titular A' },
+        'E4629': { tipo: 'FIJO', horasFijas: 20, z2: 16841.65, z3: 20251.45, reqAños: 10, reqMin: 'titulado', reqAlt: ['maestria (6a)','doctorado'], nombre: 'Prof. Titular B' },
+        'E4653': { tipo: 'FIJO', horasFijas: 20, z2: 8951.70, z3: 10726.80, reqAños: 0, reqMin: 'pasante', reqAlt: [], nombre: 'Tec. Doc. Asoc. A' },
+        'E4655': { tipo: 'FIJO', horasFijas: 20, z2: 9852.60, z3: 11691.15, reqAños: 0, reqMin: 'titulado', reqAlt: [], nombre: 'Tec. Doc. Asoc. B' },
+        'E4657': { tipo: 'FIJO', horasFijas: 20, z2: 10708.20, z3: 12627.55, reqAños: 2, reqMin: 'titulado', reqAlt: ['especialidad','maestria','doctorado'], nombre: 'Tec. Doc. Asoc. C' },
+        'E4661': { tipo: 'FIJO', horasFijas: 20, z2: 12671.20, z3: 15303.75, reqAños: 6, reqMin: 'titulado', reqAlt: ['especialidad (2a)','maestria','doctorado'], nombre: 'Prof. Asoc. C' },
+        'E4663': { tipo: 'FIJO', horasFijas: 20, z2: 19908.75, z3: 23942.50, reqAños: 12, reqMin: 'titulado', reqAlt: ['maestria (7a)','doctorado (2a)'], nombre: 'Prof. Titular C' },
+        'E4677': { tipo: 'FIJO', horasFijas: 20, z2: 11559.85, z3: 13617.45, reqAños: 4, reqMin: 'titulado', reqAlt: ['especialidad (2a)','maestria','doctorado'], nombre: 'Tec. Doc. Tit. A' },
+        'E4679': { tipo: 'FIJO', horasFijas: 20, z2: 12671.20, z3: 15303.75, reqAños: 6, reqMin: 'titulado', reqAlt: ['especialidad (3a)','maestria (4a)','doctorado'], nombre: 'Tec. Doc. Tit. B' },
+        'E4681': { tipo: 'FIJO', horasFijas: 20, z2: 14607.10, z3: 17133.15, reqAños: 8, reqMin: 'titulado', reqAlt: ['especialidad (4a)','maestria (5a)','doctorado'], nombre: 'Tec. Doc. Tit. C' },
+
+        // Fijos 3/4 Tiempo (30 hrs)
+        'E4723': { tipo: 'FIJO', horasFijas: 30, z2: 15653.25, z3: 18454.90, reqAños: 2, reqMin: 'titulado', reqAlt: [], nombre: 'Prof. Asoc. A 3/4' },
+        'E4725': { tipo: 'FIJO', horasFijas: 30, z2: 17339.75, z3: 20426.20, reqAños: 3, reqMin: 'titulado', reqAlt: ['especialidad','maestria','doctorado'], nombre: 'Prof. Asoc. B 3/4' },
+        'E4727': { tipo: 'FIJO', horasFijas: 30, z2: 21910.60, z3: 25699.75, reqAños: 8, reqMin: 'titulado', reqAlt: ['especialidad (4a)','maestria (5a)','doctorado'], nombre: 'Prof. Tit. A 3/4' },
+        'E4729': { tipo: 'FIJO', horasFijas: 30, z2: 25262.50, z3: 30377.20, reqAños: 10, reqMin: 'titulado', reqAlt: ['maestria (6a)','doctorado'], nombre: 'Prof. Tit. B 3/4' },
+        'E4753': { tipo: 'FIJO', horasFijas: 30, z2: 13427.55, z3: 16090.20, reqAños: 0, reqMin: 'pasante', reqAlt: [], nombre: 'Tec. Doc. Asoc. A 3/4' },
+        'E4755': { tipo: 'FIJO', horasFijas: 30, z2: 14778.85, z3: 17536.75, reqAños: 0, reqMin: 'titulado', reqAlt: [], nombre: 'Tec. Doc. Asoc. B 3/4' },
+        'E4757': { tipo: 'FIJO', horasFijas: 30, z2: 16062.25, z3: 18941.30, reqAños: 2, reqMin: 'titulado', reqAlt: ['especialidad','maestria','doctorado'], nombre: 'Tec. Doc. Asoc. C 3/4' },
+        'E4761': { tipo: 'FIJO', horasFijas: 30, z2: 19006.75, z3: 22955.60, reqAños: 6, reqMin: 'titulado', reqAlt: ['especialidad (2a)','maestria','doctorado'], nombre: 'Prof. Asoc. C 3/4' },
+        'E4763': { tipo: 'FIJO', horasFijas: 30, z2: 29863.10, z3: 35913.70, reqAños: 12, reqMin: 'titulado', reqAlt: ['maestria (7a)','doctorado (2a)'], nombre: 'Prof. Tit. C 3/4' },
+        'E4777': { tipo: 'FIJO', horasFijas: 30, z2: 17339.75, z3: 20426.20, reqAños: 4, reqMin: 'titulado', reqAlt: ['especialidad (2a)','maestria','doctorado'], nombre: 'Tec. Doc. Tit. A 3/4' },
+        'E4779': { tipo: 'FIJO', horasFijas: 30, z2: 19006.75, z3: 22955.60, reqAños: 6, reqMin: 'titulado', reqAlt: ['especialidad (3a)','maestria (4a)','doctorado'], nombre: 'Tec. Doc. Tit. B 3/4' },
+        'E4781': { tipo: 'FIJO', horasFijas: 30, z2: 21910.60, z3: 25699.75, reqAños: 8, reqMin: 'titulado', reqAlt: ['especialidad (4a)','maestria (5a)','doctorado'], nombre: 'Tec. Doc. Tit. C 3/4' },
+
+        // Fijos Tiempo Completo (40 hrs)
+        'E4823': { tipo: 'FIJO', horasFijas: 40, z2: 20871.00, z3: 24606.50, reqAños: 2, reqMin: 'titulado', reqAlt: [], nombre: 'Prof. Asoc. A Completo' },
+        'E4825': { tipo: 'FIJO', horasFijas: 40, z2: 23119.65, z3: 27234.90, reqAños: 3, reqMin: 'titulado', reqAlt: ['especialidad','maestria','doctorado'], nombre: 'Prof. Asoc. B Completo' },
+        'E4827': { tipo: 'FIJO', horasFijas: 40, z2: 29214.15, z3: 34266.35, reqAños: 8, reqMin: 'titulado', reqAlt: ['especialidad (4a)','maestria (5a)','doctorado'], nombre: 'Prof. Tit. A Completo' },
+        'E4829': { tipo: 'FIJO', horasFijas: 40, z2: 33683.35, z3: 40502.90, reqAños: 10, reqMin: 'titulado', reqAlt: ['maestria (6a)','doctorado'], nombre: 'Prof. Tit. B Completo' },
+        'E4853': { tipo: 'FIJO', horasFijas: 40, z2: 17903.40, z3: 21453.60, reqAños: 0, reqMin: 'pasante', reqAlt: [], nombre: 'Tec. Doc. Asoc. A Completo' },
+        'E4855': { tipo: 'FIJO', horasFijas: 40, z2: 19705.15, z3: 23382.30, reqAños: 0, reqMin: 'titulado', reqAlt: [], nombre: 'Tec. Doc. Asoc. B Completo' },
+        'E4857': { tipo: 'FIJO', horasFijas: 40, z2: 21416.35, z3: 25255.05, reqAños: 2, reqMin: 'titulado', reqAlt: ['especialidad','maestria','doctorado'], nombre: 'Tec. Doc. Asoc. C Completo' },
+        'E4861': { tipo: 'FIJO', horasFijas: 40, z2: 25342.35, z3: 30607.45, reqAños: 6, reqMin: 'titulado', reqAlt: ['especialidad (2a)','maestria','doctorado'], nombre: 'Prof. Asoc. C Completo' },
+        'E4863': { tipo: 'FIJO', horasFijas: 40, z2: 39817.45, z3: 47884.95, reqAños: 12, reqMin: 'titulado', reqAlt: ['maestria (7a)','doctorado (2a)'], nombre: 'Prof. Titular C Completo' },
+        'E4877': { tipo: 'FIJO', horasFijas: 40, z2: 23119.65, z3: 27234.90, reqAños: 4, reqMin: 'titulado', reqAlt: ['especialidad (2a)','maestria','doctorado'], nombre: 'Tec. Doc. Tit. A Completo' },
+        'E4879': { tipo: 'FIJO', horasFijas: 40, z2: 25342.35, z3: 30607.45, reqAños: 6, reqMin: 'titulado', reqAlt: ['especialidad (3a)','maestria (4a)','doctorado'], nombre: 'Tec. Doc. Tit. B Completo' },
+        'E4881': { tipo: 'FIJO', horasFijas: 40, z2: 29214.15, z3: 34266.35, reqAños: 8, reqMin: 'titulado', reqAlt: ['especialidad (4a)','maestria (5a)','doctorado'], nombre: 'Tec. Doc. Tit. C Completo' }
+    };
+
+    // 2. Catálogo de los 41 Planteles en Veracruz (con coordenadas)
+    const listaPlanteles = [
+        { id: "CBTIS 13",  nombre: "CBTIS 13 (Xalapa)",              zona: 2, ciudad: "Xalapa, Veracruz",               lat: 19.5438, lng: -96.9102 },
+        { id: "CBTIS 17",  nombre: "CBTIS 17 (Cosamaloapan)",         zona: 2, ciudad: "Cosamaloapan, Veracruz",         lat: 18.3645, lng: -95.7955 },
+        { id: "CBTIS 30",  nombre: "CBTIS 30 (Cerro Azul)",           zona: 2, ciudad: "Cerro Azul, Veracruz",           lat: 21.1908, lng: -97.7397 },
+        { id: "CBTIS 35",  nombre: "CBTIS 35 (Tlacotalpan)",          zona: 2, ciudad: "Tlacotalpan, Veracruz",          lat: 18.6115, lng: -95.6577 },
+        { id: "CBTIS 47",  nombre: "CBTIS 47 (Córdoba)",             zona: 2, ciudad: "Córdoba, Veracruz",             lat: 18.8845, lng: -96.9333 },
+        { id: "CBTIS 48",  nombre: "CBTIS 48 (Acayucan)",             zona: 2, ciudad: "Acayucan, Veracruz",             lat: 17.9500, lng: -94.9167 },
+        { id: "CBTIS 55",  nombre: "CBTIS 55 (Pánuco)",              zona: 3, ciudad: "Pánuco, Veracruz",              lat: 22.0545, lng: -98.1788 },
+        { id: "CBTIS 66",  nombre: "CBTIS 66 (Tierra Blanca)",        zona: 2, ciudad: "Tierra Blanca, Veracruz",        lat: 18.4500, lng: -96.3500 },
+        { id: "CBTIS 67",  nombre: "CBTIS 67 (Misantla)",             zona: 2, ciudad: "Misantla, Veracruz",             lat: 19.9270, lng: -96.8498 },
+        { id: "CBTIS 71",  nombre: "CBTIS 71 (Tantoyuca)",            zona: 2, ciudad: "Tantoyuca, Veracruz",            lat: 21.3500, lng: -98.2333 },
+        { id: "CBTIS 77",  nombre: "CBTIS 77 (Lerdo de Tejada)",      zona: 2, ciudad: "Lerdo de Tejada, Veracruz",      lat: 18.6232, lng: -95.5252 },
+        { id: "CBTIS 78",  nombre: "CBTIS 78 (Poza Rica)",            zona: 2, ciudad: "Poza Rica, Veracruz",            lat: 20.5344, lng: -97.4583 },
+        { id: "CBTIS 79",  nombre: "CBTIS 79 (Boca del Río)",        zona: 3, ciudad: "Boca del Río, Veracruz",        lat: 19.1085, lng: -96.1225 },
+        { id: "CBTIS 85",  nombre: "CBTIS 85 (Coatzacoalcos)",        zona: 3, ciudad: "Coatzacoalcos, Veracruz",        lat: 18.1500, lng: -94.4333 },
+        { id: "CBTIS 101", nombre: "CBTIS 101 (Motzorongo)",          zona: 2, ciudad: "Motzorongo, Veracruz",          lat: 18.5836, lng: -96.8667 },
+        { id: "CBTIS 102", nombre: "CBTIS 102 (Paso del Macho)",      zona: 2, ciudad: "Paso del Macho, Veracruz",      lat: 18.8000, lng: -96.7167 },
+        { id: "CBTIS 113", nombre: "CBTIS 113 (Las Choapas)",         zona: 2, ciudad: "Las Choapas, Veracruz",         lat: 17.9167, lng: -94.1000 },
+        { id: "CBTIS 124", nombre: "CBTIS 124 (Veracruz)",            zona: 3, ciudad: "Veracruz, Veracruz",            lat: 19.1738, lng: -96.1342 },
+        { id: "CBTIS 142", nombre: "CBTIS 142 (Orizaba)",             zona: 2, ciudad: "Orizaba, Veracruz",             lat: 18.8500, lng: -97.1000 },
+        { id: "CBTIS 165", nombre: "CBTIS 165 (Coatepec)",            zona: 2, ciudad: "Coatepec, Veracruz",            lat: 19.4500, lng: -96.9667 },
+        { id: "CBTIS 190", nombre: "CBTIS 190 (Boca del Río)",        zona: 3, ciudad: "Boca del Río, Veracruz",        lat: 19.0980, lng: -96.1210 },
+        { id: "CBTIS 191", nombre: "CBTIS 191 (Gutiérrez Zamora)",    zona: 2, ciudad: "Gutiérrez Zamora, Veracruz",    lat: 20.4518, lng: -97.0838 },
+        { id: "CBTIS 192", nombre: "CBTIS 192 (Ixtaczoquitlán)",     zona: 2, ciudad: "Ixtaczoquitlán, Veracruz",     lat: 18.8553, lng: -97.0627 },
+        { id: "CBTIS 213", nombre: "CBTIS 213 (Minatitlán)",         zona: 3, ciudad: "Minatitlán, Veracruz",         lat: 17.9908, lng: -94.5552 },
+        { id: "CBTIS 250", nombre: "CBTIS 250 (Jáltipan)",            zona: 2, ciudad: "Jáltipan, Veracruz",            lat: 17.9667, lng: -94.7167 },
+        { id: "CBTIS 251", nombre: "CBTIS 251 (Santiago Tuxtla)",     zona: 2, ciudad: "Santiago Tuxtla, Veracruz",     lat: 18.4667, lng: -95.3000 },
+        { id: "CBTIS 261", nombre: "CBTIS 261 (Actopan)",             zona: 2, ciudad: "Actopan, Veracruz",             lat: 19.5000, lng: -96.6167 },
+        { id: "CBTIS 267", nombre: "CBTIS 267 (Ozuluama)",            zona: 2, ciudad: "Ozuluama, Veracruz",            lat: 21.6667, lng: -97.8500 },
+        { id: "CBTIS 268", nombre: "CBTIS 268 (Veracruz)",            zona: 3, ciudad: "Veracruz, Veracruz",            lat: 19.1800, lng: -96.1400 },
+        { id: "CETIS 15",  nombre: "CETIS 15 (Veracruz)",             zona: 3, ciudad: "Veracruz, Veracruz",             lat: 19.1900, lng: -96.1300 },
+        { id: "CETIS 72",  nombre: "CETIS 72 (Minatitlán)",           zona: 2, ciudad: "Minatitlán, Veracruz",           lat: 17.9850, lng: -94.5600 },
+        { id: "CETIS 79",  nombre: "CETIS 79 (Coatzacoalcos)",         zona: 3, ciudad: "Coatzacoalcos, Veracruz",         lat: 18.1450, lng: -94.4400 },
+        { id: "CETIS 110", nombre: "CETIS 110 (San Andrés Tuxtla)",   zona: 2, ciudad: "San Andrés Tuxtla, Veracruz",   lat: 18.4500, lng: -95.2167 },
+        { id: "CETIS 111", nombre: "CETIS 111 (Tuxpan)",              zona: 2, ciudad: "Tuxpan, Veracruz",              lat: 20.9588, lng: -97.4026 },
+        { id: "CETIS 133", nombre: "CETIS 133 (Naranjos)",            zona: 2, ciudad: "Naranjos, Veracruz",            lat: 21.3500, lng: -97.6833 },
+        { id: "CETIS 134", nombre: "CETIS 134 (Banderilla)",          zona: 2, ciudad: "Banderilla, Veracruz",          lat: 19.5667, lng: -96.9333 },
+        { id: "CETIS 143", nombre: "CETIS 143 (Fortín)",             zona: 2, ciudad: "Fortín, Veracruz",             lat: 18.9000, lng: -97.0000 },
+        { id: "CETIS 144", nombre: "CETIS 144 (Isla)",                zona: 2, ciudad: "Isla, Veracruz",                lat: 17.9167, lng: -95.5333 },
+        { id: "CETIS 145", nombre: "CETIS 145 (Martínez de la Torre)",zona: 2, ciudad: "Martínez de la Torre, Veracruz",lat: 20.0667, lng: -97.0500 },
+        { id: "CETIS 146", nombre: "CETIS 146 (Río Blanco)",          zona: 2, ciudad: "Río Blanco, Veracruz",          lat: 18.8333, lng: -97.1667 },
+        { id: "CETIS 164", nombre: "CETIS 164 (Cuitláhuac)",          zona: 2, ciudad: "Cuitláhuac, Veracruz",          lat: 18.7833, lng: -96.6167 }
+    ];
+
+    // Catálogo de Municipios Principales de Veracruz con Coordenadas Predefinidas
+    const listaMunicipiosVeracruz = [
+        { nombre: "Gutiérrez Zamora, Veracruz", lat: 20.4518, lng: -97.0838 },
+        { nombre: "Xalapa, Veracruz",           lat: 19.5438, lng: -96.9102 },
+        { nombre: "Veracruz, Veracruz",         lat: 19.1738, lng: -96.1342 },
+        { nombre: "Boca del Río, Veracruz",     lat: 19.1085, lng: -96.1225 },
+        { nombre: "Poza Rica, Veracruz",        lat: 20.5344, lng: -97.4583 },
+        { nombre: "Coatzacoalcos, Veracruz",    lat: 18.1500, lng: -94.4333 },
+        { nombre: "Córdoba, Veracruz",          lat: 18.8845, lng: -96.9333 },
+        { nombre: "Orizaba, Veracruz",          lat: 18.8500, lng: -97.1000 },
+        { nombre: "Tuxpan, Veracruz",           lat: 20.9588, lng: -97.4026 },
+        { nombre: "Minatitlán, Veracruz",      lat: 17.9908, lng: -94.5552 },
+        { nombre: "Papantla, Veracruz",         lat: 20.4461, lng: -97.3236 },
+        { nombre: "San Andrés Tuxtla, Veracruz",lat: 18.4500, lng: -95.2167 },
+        { nombre: "Martínez de la Torre, Ver.", lat: 20.0667, lng: -97.0500 },
+        { nombre: "Cosamaloapan, Veracruz",     lat: 18.3645, lng: -95.7955 },
+        { nombre: "Cerro Azul, Veracruz",       lat: 21.1908, lng: -97.7397 },
+        { nombre: "Pánuco, Veracruz",           lat: 22.0545, lng: -98.1788 },
+        { nombre: "Misantla, Veracruz",         lat: 19.9270, lng: -96.8498 },
+        { nombre: "Tantoyuca, Veracruz",        lat: 21.3500, lng: -98.2333 },
+        { nombre: "Acayucan, Veracruz",         lat: 17.9500, lng: -94.9167 },
+        { nombre: "Tierra Blanca, Veracruz",    lat: 18.4500, lng: -96.3500 },
+        { nombre: "Coatepec, Veracruz",         lat: 19.4500, lng: -96.9667 },
+        { nombre: "Tlacotalpan, Veracruz",      lat: 18.6115, lng: -95.6577 },
+        { nombre: "Naranjos, Veracruz",         lat: 21.3500, lng: -97.6833 },
+        { nombre: "Isla, Veracruz",             lat: 17.9167, lng: -95.5333 },
+        { nombre: "Las Choapas, Veracruz",      lat: 17.9167, lng: -94.1000 },
+        { nombre: "Fortín de las Flores, Ver.",  lat: 18.9000, lng: -97.0000 },
+        { nombre: "Río Blanco, Veracruz",       lat: 18.8333, lng: -97.1667 },
+        { nombre: "Ixtaczoquitlán, Veracruz",  lat: 18.8553, lng: -97.0627 },
+        { nombre: "Paso del Macho, Veracruz",   lat: 18.8000, lng: -96.7167 },
+        { nombre: "Motzorongo, Veracruz",       lat: 18.5836, lng: -96.8667 },
+        { nombre: "Ozuluama, Veracruz",         lat: 21.6667, lng: -97.8500 },
+        { nombre: "Actopan, Veracruz",          lat: 19.5000, lng: -96.6167 }
+    ];
+
+    // --- Utilidades de Geolocalización y Mapa Interactivo (Leaflet.js) ---
+    let miPosicion = null; // { lat, lng } detectada por GPS, seleccionada en mapa o elegida por municipio
+    let leafletMap = null;
+    let originMarker = null;
+    let tempMapSelection = null;
+
+    // Inicializar desplegable de municipios
+    function cargarMunicipiosSelect() {
+        const select = document.getElementById('selectMunicipio');
+        if (!select) return;
+        select.innerHTML = '<option value="" disabled selected>Selecciona tu ciudad o municipio de origen...</option>';
+        listaMunicipiosVeracruz.forEach((m, idx) => {
+            let opt = document.createElement('option');
+            opt.value = idx;
+            opt.textContent = m.nombre;
+            select.appendChild(opt);
+        });
+    }
+
+    function setOrigenMode(mode) {
+        document.getElementById('btnModeGPS').classList.toggle('active', mode === 'gps');
+        document.getElementById('btnModeMunicipio').classList.toggle('active', mode === 'municipio');
+        document.getElementById('btnModeMapa').classList.toggle('active', mode === 'mapa');
+
+        const boxMun = document.getElementById('boxOrigenMunicipio');
+        if (mode === 'municipio') {
+            boxMun.style.display = 'block';
+        } else {
+            boxMun.style.display = 'none';
+        }
+
+        if (mode === 'gps') {
+            detectarUbicacion();
+        }
+    }
+
+    function onMunicipioSelected() {
+        const idx = document.getElementById('selectMunicipio').value;
+        if (idx === "") return;
+        const mun = listaMunicipiosVeracruz[idx];
+        miPosicion = { lat: mun.lat, lng: mun.lng };
+        document.getElementById('origen').value = mun.nombre;
+        mostrarBadgeUbicacion(`🏙️ ${mun.nombre} (${mun.lat.toFixed(3)}, ${mun.lng.toFixed(3)})`);
+        document.getElementById('gpsToggles').style.display = 'flex';
+        filtrarPlanteles(true);
+    }
+
+    function onTextoOrigenInput() {
+        // Si el usuario escribe manualmente en el campo texto, resetear la ubicación por coordenadas
+        miPosicion = null;
+        document.getElementById('badgeUbicacionActiva').style.display = 'none';
+        const toggles = document.getElementById('gpsToggles');
+        if (toggles) toggles.style.display = 'none';
+        filtrarPlanteles(true);
+    }
+
+    function mostrarBadgeUbicacion(texto) {
+        const badge = document.getElementById('badgeUbicacionActiva');
+        const txt = document.getElementById('txtUbicacionActiva');
+        if (badge && txt) {
+            txt.textContent = texto;
+            badge.style.display = 'inline-flex';
+        }
+    }
+
+    // --- Funcionalidad de Mapa Leaflet Modal ---
+    function abrirMapaModal() {
+        document.getElementById('mapModal').style.display = 'flex';
+        
+        // Inicializar Leaflet map sólo una vez
+        setTimeout(() => {
+            if (!leafletMap) {
+                leafletMap = L.map('leafletMapContainer').setView([19.5000, -96.7000], 8);
+                
+                // Capa OpenStreetMap 100% Gratis sin API Key
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 18,
+                    attribution: '© OpenStreetMap'
+                }).addTo(leafletMap);
+
+                // Agregar marcadores azules para todos los 41 planteles DGETI
+                listaPlanteles.forEach(p => {
+                    L.marker([p.lat, p.lng], {
+                        title: p.nombre,
+                        opacity: 0.75
+                    }).addTo(leafletMap).bindPopup(`<b>${p.nombre}</b><br>${p.ciudad}`);
+                });
+
+                // Escuchar clics en el mapa para colocar el pin de origen (Rojo)
+                leafletMap.on('click', (e) => {
+                    const lat = e.latlng.lat;
+                    const lng = e.latlng.lng;
+                    tempMapSelection = { lat, lng };
+
+                    if (originMarker) {
+                        originMarker.setLatLng([lat, lng]);
+                    } else {
+                        // Crear marcador con icono destacado
+                        originMarker = L.marker([lat, lng], { draggable: true }).addTo(leafletMap);
+                        originMarker.on('dragend', (evt) => {
+                            const newPos = evt.target.getLatLng();
+                            tempMapSelection = { lat: newPos.lat, lng: newPos.lng };
+                            actualizarInfoMapa(newPos.lat, newPos.lng);
+                        });
+                    }
+                    actualizarInfoMapa(lat, lng);
+                    document.getElementById('btnConfirmMap').disabled = false;
+                });
+            } else {
+                leafletMap.invalidateSize();
+            }
+
+            // Si ya teníamos una posición, centrar allí
+            if (miPosicion) {
+                leafletMap.setView([miPosicion.lat, miPosicion.lng], 10);
+                if (!originMarker) {
+                    originMarker = L.marker([miPosicion.lat, miPosicion.lng], { draggable: true }).addTo(leafletMap);
+                } else {
+                    originMarker.setLatLng([miPosicion.lat, miPosicion.lng]);
+                }
+                tempMapSelection = { lat: miPosicion.lat, lng: miPosicion.lng };
+                actualizarInfoMapa(miPosicion.lat, miPosicion.lng);
+                document.getElementById('btnConfirmMap').disabled = false;
+            }
+        }, 200);
+    }
+
+    function actualizarInfoMapa(lat, lng) {
+        document.getElementById('mapSelectionInfo').innerHTML = 
+            `📍 Punto seleccionado: <b>Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}</b>`;
+    }
+
+    function cerrarMapaModal() {
+        document.getElementById('mapModal').style.display = 'none';
+    }
+
+    function confirmarUbicacionMapa() {
+        if (!tempMapSelection) return;
+        miPosicion = { lat: tempMapSelection.lat, lng: tempMapSelection.lng };
+        const nombreUbicacion = `Punto en Mapa (${miPosicion.lat.toFixed(4)}, ${miPosicion.lng.toFixed(4)})`;
+        document.getElementById('origen').value = nombreUbicacion;
+        mostrarBadgeUbicacion(`🗺️ ${nombreUbicacion}`);
+        document.getElementById('gpsToggles').style.display = 'flex';
+        cerrarMapaModal();
+        filtrarPlanteles(true);
+    }
+
+    // Fórmula Haversine: distancia en km entre dos puntos lat/lng
+    function haversineKm(lat1, lng1, lat2, lng2) {
+        const R = 6371; // Radio de la Tierra en km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLng = (lng2 - lng1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    // Estimar tiempo en minutos (velocidad promedio carretera Veracruz ~65 km/h)
+    function estimarMinutos(km) {
+        return Math.round(km / 65 * 60);
+    }
+
+    function detectarUbicacion() {
+        const btn = document.getElementById('btnModeGPS');
+        const status = document.getElementById('gpsStatus');
+        if (!navigator.geolocation) {
+            if (status) {
+                status.textContent = '❌ Tu navegador no soporta geolocalización.';
+                status.className = 'gps-status err';
+            }
+            return;
+        }
+        if (btn) {
+            btn.classList.add('active');
+            btn.disabled = true;
+            btn.textContent = '⏳ Detectando...';
+        }
+        document.getElementById('btnModeMapa')?.classList.remove('active');
+
+        if (status) {
+            status.textContent = 'Solicitando permiso de ubicación...';
+            status.className = 'gps-status';
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                miPosicion = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '✅ GPS Activo';
+                }
+                const nombreUbi = `Ubicación GPS (${miPosicion.lat.toFixed(4)}, ${miPosicion.lng.toFixed(4)})`;
+                document.getElementById('origen').value = nombreUbi;
+                mostrarBadgeUbicacion(`📍 ${nombreUbi}`);
+                const toggles = document.getElementById('gpsToggles');
+                if (toggles) toggles.style.display = 'flex';
+                filtrarPlanteles(true);
+            },
+            (err) => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '📍 GPS Dispositivo';
+                    btn.classList.remove('active');
+                }
+                let msg = 'No se pudo obtener la ubicación.';
+                if (err.code === 1) msg = '❌ Permiso denegado. Permite el acceso en tu navegador.';
+                else if (err.code === 2) msg = '❌ Ubicación no disponible.';
+                else if (err.code === 3) msg = '❌ Tiempo de espera agotado.';
+                if (status) {
+                    status.textContent = msg;
+                    status.className = 'gps-status err';
+                }
+            },
+            { timeout: 10000, maximumAge: 60000 }
+        );
+    }
+
+    // Funciones de Filtrado Dinámico para Selects
+    function filtrarPlanteles(resetSelection = false) {
+        const query = document.getElementById('filtroPlantel').value.toLowerCase().trim();
+        const selectPlantel = document.getElementById('plantel');
+        const valorPrevio = resetSelection ? "" : selectPlantel.value;
+        const filtroMenos2h  = document.getElementById('toggleMenos2h')?.checked || false;
+        const filtro5Cercanos = document.getElementById('toggle5cercanos')?.checked || false;
+        const gpsStatus = document.getElementById('gpsStatus');
+
+        selectPlantel.innerHTML = '';
+
+        // Calcular distancias si hay posición activa (GPS, Mapa o Municipio)
+        let plantelesCandidatos = listaPlanteles.map(p => {
+            if (miPosicion) {
+                const km = haversineKm(miPosicion.lat, miPosicion.lng, p.lat, p.lng);
+                return { ...p, km: Math.round(km), mins: estimarMinutos(km) };
+            }
+            return { ...p, km: null, mins: null };
+        });
+
+        // Ordenar por distancia si hay coordenadas de origen activas
+        if (miPosicion) {
+            plantelesCandidatos.sort((a, b) => a.km - b.km);
+        }
+
+        // Filtro por búsqueda de texto
+        if (query) {
+            plantelesCandidatos = plantelesCandidatos.filter(p =>
+                p.id.toLowerCase().includes(query) ||
+                p.nombre.toLowerCase().includes(query) ||
+                p.ciudad.toLowerCase().includes(query)
+            );
+        }
+
+        let avisoDistancia = "";
+
+        // Filtro < 2 horas (120 min) con respaldo inteligente
+        if (filtroMenos2h && miPosicion) {
+            const filtrados2h = plantelesCandidatos.filter(p => p.mins !== null && p.mins < 120);
+            if (filtrados2h.length > 0) {
+                plantelesCandidatos = filtrados2h;
+            } else {
+                avisoDistancia = "⚠️ Sin planteles a < 2h de este punto (mostrando los más cercanos):";
+            }
+        }
+
+        // Filtro 5 más cercanos
+        if (filtro5Cercanos && miPosicion) {
+            plantelesCandidatos = plantelesCandidatos.slice(0, 5);
+        }
+
+        // Actualizar mensaje de estatus de cercanía
+        if (gpsStatus && miPosicion) {
+            if (avisoDistancia) {
+                gpsStatus.textContent = avisoDistancia;
+                gpsStatus.className = 'gps-status err';
+            } else {
+                const totalMostrados = plantelesCandidatos.length;
+                gpsStatus.textContent = `✅ ${totalMostrados} planteles ordenados por cercanía desde tu ubicación`;
+                gpsStatus.className = 'gps-status ok';
+            }
+        }
+
+        if (plantelesCandidatos.length === 0) {
+            let option = document.createElement('option');
+            option.value = '';
+            option.text = 'Sin resultados para la búsqueda de texto';
+            option.disabled = true;
+            option.selected = true;
+            selectPlantel.appendChild(option);
+            return;
+        }
+
+        let algunoSeleccionado = false;
+        plantelesCandidatos.forEach((p, idx) => {
+            let option = document.createElement('option');
+            option.value = `${p.id}|${p.zona}|${p.ciudad}`;
+            let distLabel = '';
+            if (p.km !== null) {
+                const horas = Math.floor(p.mins / 60);
+                const minRest = p.mins % 60;
+                const tiempoStr = horas > 0 ? `${horas}h ${minRest}min` : `${minRest} min`;
+                distLabel = ` (${p.km} km - aprox ${tiempoStr})`;
+            }
+            option.text = `${p.nombre} - Z.Ec. ${p.zona === 2 ? 'II' : 'III'}${distLabel}`;
+            
+            if (valorPrevio && option.value === valorPrevio) {
+                option.selected = true;
+                algunoSeleccionado = true;
+            } else if (!algunoSeleccionado && idx === 0) {
+                option.selected = true;
+                algunoSeleccionado = true;
+            }
+            selectPlantel.appendChild(option);
+        });
+
+        if (!algunoSeleccionado && selectPlantel.options.length > 0) {
+            selectPlantel.options[0].selected = true;
+        }
+    }
+
+    function obtenerAntiguedadActual() {
+        const grado = document.getElementById('grado').value;
+        const fechaInput = document.getElementById('fechaTitulacion').value;
+        if (!grado || grado === 'pasante' || grado === 'titulado_nuevo') return 0;
+        if (!fechaInput) return 0;
+        const fechaTitulacion = new Date(fechaInput);
+        const fechaActual = new Date();
+        let anos = fechaActual.getFullYear() - fechaTitulacion.getFullYear();
+        if (fechaActual.getMonth() < fechaTitulacion.getMonth() ||
+            (fechaActual.getMonth() === fechaTitulacion.getMonth() && fechaActual.getDate() < fechaTitulacion.getDate())) {
+            anos--;
+        }
+        return Math.max(0, anos);
+    }
+
+    function actualizarFiltroInteligente() {
+        // Re-ejecutar filtrado de claves con el estado actual del toggle
+        filtrarClaves();
+        // Actualizar visual del wrapper
+        const toggle = document.getElementById('toggleFiltroCompatible');
+        const wrapper = document.getElementById('wrapperFiltroInteligente');
+        if (toggle && wrapper) {
+            wrapper.classList.toggle('activo', toggle.checked);
+        }
+    }
+
+    function filtrarClaves() {
+        const query = document.getElementById('filtroClave').value.toLowerCase().trim();
+        const selectClave = document.getElementById('clave');
+        const valorPrevio = selectClave.value;
+        const filtroActivo = document.getElementById('toggleFiltroCompatible')?.checked || false;
+        const grado = document.getElementById('grado').value;
+        const antiguedad = obtenerAntiguedadActual();
+
+        selectClave.innerHTML = '';
+
+        let clavesFiltradas = Object.entries(tabulador).filter(([clave, data]) => {
+            // Filtro de búsqueda por texto
+            if (query) {
+                const coincideTexto = clave.toLowerCase().includes(query) ||
+                    data.nombre.toLowerCase().includes(query) ||
+                    data.tipo.toLowerCase().includes(query);
+                if (!coincideTexto) return false;
+            }
+            // Filtro inteligente de compatibilidad
+            if (filtroActivo && grado) {
+                const eval_ = evaluarCumplimiento(grado, antiguedad, data);
+                if (!eval_.cumple) return false;
+            }
+            return true;
+        });
+
+        // Actualizar badge con conteo
+        const badge = document.getElementById('badgeFiltro');
+        const total = Object.keys(tabulador).length;
+        if (badge) {
+            if (filtroActivo && grado) {
+                badge.textContent = `${clavesFiltradas.length} / ${total} COMPATIBLES`;
+            } else {
+                badge.textContent = `TODAS (${total})`;
+            }
+        }
+
+        if (clavesFiltradas.length === 0) {
+            let option = document.createElement('option');
+            option.value = '';
+            option.text = filtroActivo ? 'Sin plazas compatibles con tu perfil actual' : 'Sin resultados para la búsqueda';
+            option.disabled = true;
+            option.selected = true;
+            selectClave.add(option);
+            manejarHoras();
+            return;
+        }
+
+        for (const [clave, data] of clavesFiltradas) {
+            let option = document.createElement('option');
+            option.value = clave;
+            option.text = `${clave} - ${data.nombre} (${data.tipo})`;
+            if (clave === valorPrevio) {
+                option.selected = true;
+            }
+            selectClave.add(option);
+        }
+
+        if (!selectClave.value && selectClave.options.length > 0) {
+            selectClave.selectedIndex = 0;
+        }
+
+        manejarHoras();
+    }
+
+    // Inicializar Selectores
+    window.onload = function() {
+        cargarMunicipiosSelect();
+        filtrarClaves();
+        filtrarPlanteles();
+        toggleFecha();
+    };
+
+    function toggleFecha() {
+        const grado = document.getElementById('grado').value;
+        const divFecha = document.getElementById('divFecha');
+        if (grado === 'pasante' || grado === 'titulado_nuevo' || !grado) {
+            divFecha.style.display = 'none';
+        } else {
+            divFecha.style.display = 'block';
+        }
+    }
+
+    // Activa o Desactiva las horas según si la clave es FIJO o HSM
+    function manejarHoras() {
+        const claveSeleccionada = document.getElementById('clave').value;
+        const inputHoras = document.getElementById('horas');
+        const info = tabulador[claveSeleccionada];
+
+        if (info && info.tipo === 'FIJO') {
+            inputHoras.value = info.horasFijas;
+            inputHoras.disabled = true;
+        } else {
+            inputHoras.disabled = false;
+        }
+    }
+
+    // Evaluación precisa de requisitos normativos (Licenciatura y Posgrados)
+    function evaluarCumplimiento(grado, antiguedad, infoClave) {
+        // 1. Si la plaza exige pasante
+        if (infoClave.reqMin === 'pasante') {
+            return { cumple: true, anosRequeridos: 0 };
+        }
+
+        // 2. Si la plaza exige titulado con 0 años
+        if (infoClave.reqMin === 'titulado' && infoClave.reqAños === 0) {
+            if (grado === 'pasante') {
+                return { cumple: false, motivoDetalle: 'Se requiere estar Titulado.' };
+            }
+            return { cumple: true, anosRequeridos: 0 };
+        }
+
+        // 3. Para plazas que exigen años de experiencia / antigüedad (> 0 años):
+        if (grado === 'pasante') {
+            return { cumple: false, motivoDetalle: 'Se requiere Título o Posgrado con antigüedad.' };
+        }
+
+        // Si es titulado (recién o con antigüedad), debe cumplir reqAños base
+        if (grado === 'titulado_nuevo' || grado === 'titulado_antiguo') {
+            const cumple = antiguedad >= infoClave.reqAños;
+            return { 
+                cumple: cumple, 
+                anosRequeridos: infoClave.reqAños,
+                motivoDetalle: cumple ? '' : `Como Titulado de Licenciatura requieres al menos ${infoClave.reqAños} año(s) de antigüedad (tienes ${antiguedad}).` 
+            };
+        }
+
+        // 4. Evaluación para Posgrados (especialidad, maestria, doctorado)
+        // A) Si la antigüedad como profesional ya cubre los reqAños base de Licenciatura
+        if (antiguedad >= infoClave.reqAños) {
+            return { cumple: true, anosRequeridos: infoClave.reqAños };
+        }
+
+        // B) Un grado superior de posgrado (Especialidad, Maestría, Doctorado) ampara y cubre automáticamente plazas iniciales / asociadas de 2 o 3 años de Licenciatura (ej. E4515, E4623, E4723, E4823)
+        if (infoClave.reqAños <= 3) {
+            return { cumple: true, anosRequeridos: 0 };
+        }
+
+        // C) Para plazas superiores (Titular A/B/C con reqAños > 3), buscar en reqAlt si el posgrado otorga reducción de antigüedad
+        const reqAlt = infoClave.reqAlt || [];
+        let entradaAlt = null;
+
+        for (let item of reqAlt) {
+            const itemLower = item.toLowerCase();
+            if (grado === 'especialidad' && itemLower.includes('especialidad')) {
+                entradaAlt = item;
+                break;
+            }
+            if (grado === 'maestria' && itemLower.includes('maestria')) {
+                entradaAlt = item;
+                break;
+            }
+            if (grado === 'doctorado' && itemLower.includes('doctorado')) {
+                entradaAlt = item;
+                break;
+            }
+        }
+
+        if (!entradaAlt) {
+            // El posgrado no es alternativa aceptada para esta plaza superior sin cumplir la antigüedad base
+            return { 
+                cumple: false, 
+                motivoDetalle: `Este posgrado no aplica como alternativa reducida para esta plaza. Requieres ${infoClave.reqAños} año(s) de antigüedad.` 
+            };
+        }
+
+        // Extraer los años requeridos para el posgrado (ej. "especialidad (3a)" -> 3 años, "especialidad" -> 0 años)
+        let anosPosgrado = 0;
+        const matchAnos = entradaAlt.match(/\((\d+)a\)/);
+        if (matchAnos) {
+            anosPosgrado = parseInt(matchAnos[1]);
+        }
+
+        const cumplePosgrado = antiguedad >= anosPosgrado;
+        return {
+            cumple: cumplePosgrado,
+            anosRequeridos: anosPosgrado,
+            motivoDetalle: cumplePosgrado ? '' : `Con ${grado.toUpperCase()} en esta plaza se requieren al menos ${anosPosgrado} año(s) de antigüedad (tienes ${antiguedad}).`
+        };
+    }
+
+    function procesarVacante() {
+        const origen = document.getElementById('origen').value.trim();
+        const grado = document.getElementById('grado').value;
+        const fechaInput = document.getElementById('fechaTitulacion').value;
+        const clave = document.getElementById('clave').value;
+        const horasInputVal = document.getElementById('horas').value;
+        const horas = parseInt(horasInputVal) || 0;
+        
+        const valPlantel = document.getElementById('plantel').value;
+
+        if (!origen || !grado || !clave || !valPlantel) {
+            alert('Por favor, selecciona o ingresa todos los campos requeridos (Origen, Grado, Plantel y Categoría).');
+            return;
+        }
+
+        const plantelDatos = valPlantel.split('|');
+        const nombrePlantel = plantelDatos[0];
+        const zonaEconomica = parseInt(plantelDatos[1]);
+        const destinoLugar = plantelDatos[2];
+
+        const infoClave = tabulador[clave];
+        // Calcular Antigüedad en años completos desde la fecha de titulación hasta hoy
+        let antiguedad = 0;
+        if ((grado !== 'pasante' && grado !== 'titulado_nuevo') && fechaInput) {
+            const fechaTitulacion = new Date(fechaInput);
+            const fechaActual = new Date();
+            // Calcular años completos transcurridos
+            let anosCompletos = fechaActual.getFullYear() - fechaTitulacion.getFullYear();
+            const mesActual = fechaActual.getMonth();
+            const mesTitle = fechaTitulacion.getMonth();
+            // Si aún no llegó el aniversario este año, restar 1
+            if (mesActual < mesTitle || (mesActual === mesTitle && fechaActual.getDate() < fechaTitulacion.getDate())) {
+                anosCompletos--;
+            }
+            antiguedad = Math.max(0, anosCompletos);
+        }
+
+        // Sistema de Validación de Requisitos Dinámico
+        const evaluacion = evaluarCumplimiento(grado, antiguedad, infoClave);
+        const cumple = evaluacion.cumple;
+        let motivo = "";
+
+        // Generar descripción legible del requisito
+        let minDoc = infoClave.reqMin === 'pasante' ? 'Pasante de Licenciatura' : 'Título de Licenciatura';
+        let minAnos = infoClave.reqAños > 0 ? `mínimo ${infoClave.reqAños} año(s) de antigüedad` : 'sin antigüedad previa requerida';
+        let reqDesc = `${minDoc} (${minAnos})`;
+        if (infoClave.reqAlt && infoClave.reqAlt.length > 0) {
+            const altFormateados = infoClave.reqAlt.map(item => {
+                // Si el item no tiene años entre paréntesis, agregar aclaración de "sin antigüedad requerida"
+                if (!item.match(/\(\d+a\)/)) {
+                    return `${item} (sin antigüedad requerida)`;
+                }
+                return item;
+            });
+            reqDesc += ` o posgrados válidos: ${altFormateados.join(', ')}`;
+        }
+
+        if (cumple) {
+            motivo = `✓ Perfil compatible. Requisito normativo DGETI: ${reqDesc}.`;
+        } else {
+            let detalleError = evaluacion.motivoDetalle ? ` ${evaluacion.motivoDetalle}` : '';
+            motivo = `✕ Perfil no compatible.${detalleError} Requisito normativo DGETI: ${reqDesc}.`;
+        }
+
+        // Renderizado del Estatus
+        const badge = document.getElementById('statusBadge');
+        if (cumple) {
+            badge.textContent = "✓ PERFIL APROBADO";
+            badge.className = "status-badge status-ok";
+        } else {
+            badge.textContent = "✕ PERFIL NO COMPATIBLE";
+            badge.className = "status-badge status-fail";
+        }
+
+        document.getElementById('resAntiguedad').textContent = antiguedad;
+        document.getElementById('motivoRequisito').textContent = motivo;
+
+        // Calcular Sueldo
+        let sueldoCalculado = 0;
+        let desglose = "";
+
+        if (infoClave.tipo === 'HSM') {
+            const tarifa = zonaEconomica === 2 ? infoClave.z2 : infoClave.z3;
+            sueldoCalculado = tarifa * horas;
+            desglose = `Cálculo por horas: ${horas} horas × $${tarifa.toFixed(2)} (Tarifa HSM en Zona ${zonaEconomica})`;
+        } else {
+            sueldoCalculado = zonaEconomica === 2 ? infoClave.z2 : infoClave.z3;
+            desglose = `Sueldo tabular mensual FIJO (Jornada de ${infoClave.horasFijas} hrs) para Zona Económica ${zonaEconomica === 2 ? 'II' : 'III'}.`;
+        }
+
+        document.getElementById('resSueldo').textContent = `$${sueldoCalculado.toLocaleString('es-MX', {minimumFractionDigits: 2})}`;
+        document.getElementById('desgloseSueldo').textContent = desglose;
+
+        // Google Maps
+        document.getElementById('resOrigen').textContent = origen;
+        
+        let originParam = encodeURIComponent(origen);
+        if ((origen.includes('Punto en Mapa') || origen.includes('Ubicación GPS')) && miPosicion) {
+            originParam = `${miPosicion.lat.toFixed(5)},${miPosicion.lng.toFixed(5)}`;
+        }
+        
+        let destText = `${nombrePlantel}, ${destinoLugar}`;
+        const plantelSeleccionadoData = listaPlanteles.filter(p => p.id === nombrePlantel);
+        if (plantelSeleccionadoData.length > 0) {
+            const pSel = plantelSeleccionadoData[0];
+            destText = `${pSel.nombre}, ${pSel.ciudad}`;
+        }
+        document.getElementById('resDestino').textContent = destText;
+
+        const mapUrl = `https://www.google.com/maps/dir/?api=1&origin=${originParam}&destination=${encodeURIComponent(destText)}`;
+        document.getElementById('btnMapa').href = mapUrl;
+
+        // Mostrar div final
+        document.getElementById('resultados').style.display = 'grid';
+    }
+</script>
+
+<!-- Modal con Mapa Interactivo Leaflet.js -->
+<div class="map-modal-overlay" id="mapModal">
+    <div class="map-modal-content">
+        <div class="map-modal-header">
+            <h3>🗺️ Seleccionar Punto de Origen en el Mapa</h3>
+            <button type="button" class="map-modal-close" onclick="cerrarMapaModal()">✕</button>
+        </div>
+        <div id="leafletMapContainer"></div>
+        <div class="map-modal-footer">
+            <div class="map-selection-info" id="mapSelectionInfo">
+                📌 Haz clic en cualquier lugar del mapa para colocar tu punto de partida.
+            </div>
+            <button type="button" class="btn-confirm-map" id="btnConfirmMap" onclick="confirmarUbicacionMapa()" disabled>
+                ✅ Usar este punto como Origen
+            </button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
